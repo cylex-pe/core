@@ -12,6 +12,8 @@ type Holder struct {
 	ranks map[string]Rank
 	// permission represents the highest permission a Rank Holder has.
 	permission int
+	// staff represents whether this user is a staff member or not.
+	staff bool
 	// lock locks the data for accessing.
 	lock sync.RWMutex
 }
@@ -21,6 +23,7 @@ func NewHolder() Holder {
 	return Holder{
 		ranks:      map[string]Rank{},
 		permission: 0,
+		staff:      false,
 	}
 }
 
@@ -54,6 +57,13 @@ func (h *Holder) Rank(name string) *Rank {
 	return nil
 }
 
+// Staff returns whether this rank holder is a staff member or not.
+func (h *Holder) Staff() bool {
+	defer h.lock.RUnlock()
+	h.lock.RLock()
+	return h.staff
+}
+
 // HolderFromJson returns a new holder from Marshaled data, I was going do this in Unmarshal, but I need access to a
 // register.
 func HolderFromJson(data []byte, registry *Registry) (*Holder, error) {
@@ -73,6 +83,9 @@ func HolderFromJson(data []byte, registry *Registry) (*Holder, error) {
 		if rank.Level() > holder.permission {
 			holder.permission = rank.Level()
 		}
+		if rank.Staff() && !holder.staff {
+			holder.staff = true
+		}
 	}
 	return &holder, nil
 }
@@ -81,9 +94,13 @@ func HolderFromJson(data []byte, registry *Registry) (*Holder, error) {
 // Holder locked.
 func (h *Holder) recalculatePermission() {
 	h.permission = 0
+	h.staff = false
 	for _, rank := range h.ranks {
 		if rank.Level() > h.permission {
 			h.permission = rank.Level()
+		}
+		if rank.Staff() && !h.staff {
+			h.staff = true
 		}
 	}
 }

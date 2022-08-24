@@ -6,4 +6,6 @@ type Rank interface {
 	Name() string
 	// Level is the importance level / security clearance of the rank.
 	Level() int
+	// Staff is whether this rank is a staff rank or not.
+	Staff() bool
 }
