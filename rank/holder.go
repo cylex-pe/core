@@ -35,6 +35,37 @@ func (h *Holder) Add(rank Rank) {
 	h.recalculatePermission()
 }
 
+// Permission returns a users highest permission.
+func (h *Holder) Permission() int {
+	defer h.lock.RUnlock()
+	h.lock.RLock()
+	return h.Permission()
+}
+
+// Highest returns the highest rank a player has, primarily by level and then staff role.
+func (h *Holder) Highest() (*Rank, error) {
+	defer h.lock.RUnlock()
+	h.lock.RLock()
+	if len(h.ranks) == 0 {
+		panic("User has no rank")
+	}
+	var highest Rank
+	first := true
+	for _, rank := range h.ranks {
+		if first {
+			first = false
+			highest = rank
+		}
+		if rank.Level() > highest.Level() {
+			highest = rank
+		}
+		if rank.Level() == highest.Level() && !highest.Staff() && rank.Staff() {
+			highest = rank
+		}
+	}
+	return &highest, nil
+}
+
 // Remove removes a rank from the holder.
 func (h *Holder) Remove(name string) bool {
 	defer h.lock.Unlock()
