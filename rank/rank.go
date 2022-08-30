@@ -8,4 +8,6 @@ type Rank interface {
 	Level() int
 	// Staff is whether this rank is a staff rank or not.
 	Staff() bool
+	// ChatFormat returns the chat format for the specific rank.
+	ChatFormat() string
 }

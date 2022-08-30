@@ -43,7 +43,9 @@ func (h *Holder) Permission() int {
 }
 
 // Highest returns the highest rank a player has, primarily by level and then staff role.
-func (h *Holder) Highest() (*Rank, error) {
+func (h *Holder) Highest() Rank {
+	//it might be advantageous to store this within the struct itself as to not iterate through all the ranks everytime
+	//someone talks.
 	defer h.lock.RUnlock()
 	h.lock.RLock()
 	if len(h.ranks) == 0 {
@@ -63,7 +65,7 @@ func (h *Holder) Highest() (*Rank, error) {
 			highest = rank
 		}
 	}
-	return &highest, nil
+	return highest
 }
 
 // Remove removes a rank from the holder.
