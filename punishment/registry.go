@@ -35,6 +35,7 @@ func (r *Registry) Xbox(xuid string) (*Xbox, error) {
 // Save attempts to save all the data within the punishment Registry.
 func (r *Registry) Save() error {
 	var err error
+	err = nil
 	for xuid, punishment := range r.xboxPunishments {
 		data := punishment.Data()
 		er := r.provider.SaveXbox(xuid, data)
