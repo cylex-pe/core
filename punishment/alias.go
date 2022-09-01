@@ -4,5 +4,4 @@ package punishment
 type Alias struct {
 	Username string `json:"username"`
 	Xuid     string `json:"xuid"`
-	//TODO: device id
 }

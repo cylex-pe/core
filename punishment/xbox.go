@@ -33,6 +33,16 @@ type XboxData struct {
 	PastMutes []Punishment `json:"past_mutes"`
 }
 
+func (x *XboxData) Container() Container {
+	return &Xbox{
+		username:    x.Username,
+		currentBan:  x.CurrentBan,
+		pastBans:    x.PastBans,
+		currentMute: x.CurrentMute,
+		pastMutes:   x.PastMutes,
+	}
+}
+
 // Banned returns whether the current holder is banned or not.
 func (x *Xbox) Banned() bool {
 	x.lock.RLock()
@@ -98,10 +108,10 @@ func (x *Xbox) MuteHistory() []Data {
 }
 
 // Data returns the data representation for this punishment.
-func (x *Xbox) Data() XboxData {
+func (x *Xbox) Data() Dataer {
 	x.lock.RLock()
 	defer x.lock.RUnlock()
-	return XboxData{
+	return &XboxData{
 		Username:    x.username,
 		CurrentBan:  x.currentBan,
 		PastBans:    x.pastBans,

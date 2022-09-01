@@ -4,9 +4,9 @@ package punishment
 type Provider interface {
 	// LoadXbox is called to retrieve a specific Users punishment by xuid. If punishments don't exist
 	// it should return a Data struct with no punishments.
-	Load(ptype string, identifier string) (*Container, error)
+	Load(ptype string, identifier any) (Dataer, error)
 	// SaveXbox is called when saving a users xbox punishment.
-	Save(ptype string, identifier string, data interface{}) error
+	Save(ptype string, identifier any, data Dataer) error
 	// LoadIp is called to retrieve a specific ip punishment registry. If punishments don't exist it should return
 	// a data struct with no punishments.
 	LoadIp(ip string) (IpData, error)

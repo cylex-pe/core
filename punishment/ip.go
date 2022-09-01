@@ -25,8 +25,12 @@ type IpData struct {
 	PastBans   []Punishment `json:"past_bans"`
 }
 
-// IpAlias represents an alias with respect to a users Ip address.
-type IpAlias struct {
+func (i *IpData) Container() Container {
+	return &Ip{
+		aliases:    i.Aliases,
+		currentBan: i.CurrentBan,
+		pastBans:   i.PastBans,
+	}
 }
 
 // AddAlias attempts to add an alias into IP, it will return true if it managed to add it and false if a value already
@@ -81,10 +85,10 @@ func (i *Ip) BanHistory() []Data {
 }
 
 // Data returns the data representation of IP.
-func (i *Ip) Data() IpData {
+func (i *Ip) Data() Dataer {
 	i.lock.RLock()
 	defer i.lock.RUnlock()
-	return IpData{
+	return &IpData{
 		Aliases:    i.aliases,
 		CurrentBan: i.currentBan,
 		PastBans:   i.pastBans,
