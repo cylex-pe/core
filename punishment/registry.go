@@ -5,8 +5,17 @@ import (
 	"sync"
 )
 
+// Container is any data type that can hold user specific data
+type Container interface {
+	// Data returns a marshable representation of the data without a mutex.
+	Data() any
+}
+
 type Registry struct {
 	provider Provider
+
+	lock        sync.RWMutex
+	punishments map[string]map[string]*Container
 
 	xboxMu          sync.RWMutex
 	xboxPunishments map[string]*Xbox
@@ -20,6 +29,12 @@ func New(provider Provider) Registry {
 	return Registry{
 		provider: provider,
 	}
+}
+
+func (r *Registry) Load(ptype string, identifier string) (*Container, error) {
+	r.lock.Lock()
+	defer r.lock.Unlock()
+
 }
 
 // Xbox attempts to load an xbox xuid punishment holder from the handler or the database.
