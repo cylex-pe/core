@@ -10,11 +10,11 @@ type Xbox struct {
 	// currentBan is the players current active ban, this value can be null so we use a pointer.
 	currentBan Punishment
 	// pastBans store a history of all the users past bans.
-	pastBans []*Punishment
+	pastBans []Punishment
 	// currentMute is the players current active mute, this value can be null so we use a pointer.
 	currentMute Punishment
 	// pastMutes store a history of all the users past mutes.
-	pastMutes []*Punishment
+	pastMutes []Punishment
 	// lock locks the data for accessing.
 	lock sync.RWMutex
 }
@@ -26,11 +26,11 @@ type XboxData struct {
 	// CurrentBan represents currentBan within Xbox.
 	CurrentBan Punishment `json:"current_ban"`
 	// PastBans represents pastBans within Xbox.
-	PastBans []*Punishment `json:"past_bans"`
+	PastBans []Punishment `json:"past_bans"`
 	// CurrentMute represents currentMute within Xbox.
 	CurrentMute Punishment `json:"current_mute"`
 	// PastMutes represents pastMutes within Xbox.
-	PastMutes []*Punishment `json:"past_mutes"`
+	PastMutes []Punishment `json:"past_mutes"`
 }
 
 // Banned returns whether the current holder is banned or not.
@@ -51,7 +51,7 @@ func (x *Xbox) CurrentBan() Punishment {
 func (x *Xbox) Ban(b Punishment) {
 	x.lock.Lock()
 	defer x.lock.Unlock()
-	x.pastBans = append(x.pastBans, &x.currentBan)
+	x.pastBans = append(x.pastBans, x.currentBan)
 	x.currentBan = b
 }
 
@@ -83,7 +83,7 @@ func (x *Xbox) CurrentMute() Punishment {
 func (x *Xbox) Mute(b Punishment) {
 	x.lock.Lock()
 	defer x.lock.Unlock()
-	x.pastBans = append(x.pastBans, &x.currentBan)
+	x.pastBans = append(x.pastBans, x.currentBan)
 	x.currentBan = b
 }
 
@@ -99,6 +99,8 @@ func (x *Xbox) MuteHistory() []Data {
 
 // Data returns the data representation for this punishment.
 func (x *Xbox) Data() XboxData {
+	x.lock.RLock()
+	defer x.lock.RUnlock()
 	return XboxData{
 		Username:    x.username,
 		CurrentBan:  x.currentBan,
