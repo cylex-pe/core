@@ -11,7 +11,11 @@ const DeviceIdentifier = "device"
 
 // Container is any data type that can hold user specific data
 type Container interface {
-	Identifier() any
+	Data() Dataer
+}
+
+type Dataer interface {
+	Container() Container
 }
 
 type AliasHandler func(username, ip, device, xuid string, data ...any) bool
@@ -127,7 +131,7 @@ func (r *Registry) Save() error {
 	err = nil
 	for ptype, punishments := range r.punishments {
 		for id, punishment := range punishments {
-			er := r.provider.Save(ptype, id, &punishment)
+			er := r.provider.Save(ptype, id, punishment.Data())
 			if err == nil && er != nil {
 				err = fmt.Errorf("error saving punishment type: %v identifier %v: %w", ptype, id, er)
 			}

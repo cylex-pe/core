@@ -7,8 +7,6 @@ import (
 
 // Ip holds all ip related punishments for a user as well as their aliases.
 type Ip struct {
-	// ip the ip address that identifies this ip.
-	ip string
 	// aliases represent the information of other accounts that have the same ip address as this one.
 	aliases []Alias
 	// currentBan holds a users current Ip ban, if their not currently IPBanned it will be the default value.
@@ -23,22 +21,27 @@ type Ip struct {
 	lock sync.RWMutex
 }
 
-func NewIp(ip string, aliases []Alias, currBan Punishment, pastBans []Punishment, currMute Punishment, pastMutes []Punishment) Ip {
-	return Ip{
-		ip:          ip,
-		aliases:     aliases,
-		currentBan:  currBan,
-		pastBans:    pastBans,
-		currentMute: currMute,
-		pastMutes:   pastMutes,
-	}
+type IpData struct {
+	// aliases represent the information of other accounts that have the same ip address as this one.
+	Aliases []Alias
+	// currentBan holds a users current Ip ban, if their not currently IPBanned it will be the default value.
+	CurrentBan Punishment
+	//pastBans holds all a users past Ip bans.
+	PastBans []Punishment
+	// currentMute is the players current active mute, if they're current not ip muted it will be the default value.
+	CurrentMute Punishment
+	// pastMutes store a history of all the users past mutes.
+	PastMutes []Punishment
 }
 
-// Identifier ...
-func (i *Ip) Identifier() any {
-	i.lock.RLock()
-	defer i.lock.RUnlock()
-	return i.ip
+func (i IpData) Container() Container {
+	return &Ip{
+		aliases:     i.Aliases,
+		currentBan:  i.CurrentBan,
+		pastBans:    i.PastBans,
+		currentMute: i.CurrentMute,
+		pastMutes:   i.PastMutes,
+	}
 }
 
 // AddAlias attempts to add an alias into IP, it will return true if it managed to add it and false if a value already
@@ -118,4 +121,17 @@ func (i *Ip) MuteHistory() []Punishment {
 	i.lock.RLock()
 	defer i.lock.RUnlock()
 	return i.pastMutes
+}
+
+// Data returns the data representation of IP.
+func (i *Ip) Data() Dataer {
+	i.lock.RLock()
+	defer i.lock.RUnlock()
+	return &IpData{
+		Aliases:     i.aliases,
+		CurrentBan:  i.currentBan,
+		PastBans:    i.pastBans,
+		CurrentMute: i.currentMute,
+		PastMutes:   i.pastMutes,
+	}
 }

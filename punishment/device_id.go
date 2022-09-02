@@ -7,8 +7,6 @@ import (
 
 // Device holds all device related punishments for a user as well as their aliases.
 type Device struct {
-	// device is the specific identifier for this deviceid
-	device string
 	// aliases represent the information of other accounts that have the same device-id as this one.
 	aliases []Alias
 	// currentBan holds a users current device ban, if they're  not currently device banned it will be the default value.
@@ -23,22 +21,28 @@ type Device struct {
 	lock sync.RWMutex
 }
 
-func NewDevice(device string, aliases []Alias, currBan Punishment, pastBans []Punishment, currMute Punishment, pastMutes []Punishment) Device {
-	return Device{
-		device:      device,
-		aliases:     aliases,
-		currentBan:  currBan,
-		pastBans:    pastBans,
-		currentMute: currMute,
-		pastMutes:   pastMutes,
-	}
+// DeviceData is a data representation of device used for loading and saving devices.
+type DeviceData struct {
+	// Aliases represnt aliases within Device.
+	Aliases []Alias `json:"aliases"`
+	// CurrentBan represents currentBan within Device.
+	CurrentBan Punishment `json:"current_ban"`
+	// PastBans represents pastBans within Device.
+	PastBans []Punishment `json:"past_bans"`
+	// CurrentMute represents currentMute within Device.
+	CurrentMute Punishment `json:"current_mute"`
+	// PastMutes represents pastMutes within Device.
+	PastMutes []Punishment `json:"past_mutes"`
 }
 
-// Identifier ...
-func (d *Device) Identifier() any {
-	d.lock.RLock()
-	defer d.lock.RUnlock()
-	return d.device
+func (d *DeviceData) Container() Container {
+	return &Device{
+		aliases:     d.Aliases,
+		currentBan:  d.CurrentBan,
+		pastBans:    d.PastBans,
+		currentMute: d.CurrentMute,
+		pastMutes:   d.PastMutes,
+	}
 }
 
 // AddAlias attempts to add an alias into IP, it will return true if it managed to add it and false if a value already
@@ -118,4 +122,17 @@ func (d *Device) MuteHistory() []Punishment {
 	d.lock.RLock()
 	defer d.lock.RUnlock()
 	return d.pastMutes
+}
+
+// Data returns the data representation of IP.
+func (d *Device) Data() Dataer {
+	d.lock.RLock()
+	defer d.lock.RUnlock()
+	return &DeviceData{
+		Aliases:     d.aliases,
+		CurrentBan:  d.currentBan,
+		PastBans:    d.pastBans,
+		CurrentMute: d.currentMute,
+		PastMutes:   d.pastMutes,
+	}
 }
