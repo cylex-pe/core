@@ -7,9 +7,10 @@ import (
 
 // Ip holds all ip related punishments for a user as well as their aliases.
 type Ip struct {
+	// ip the ip address that identifies this ip.
+	ip string
 	// aliases represent the information of other accounts that have the same ip address as this one.
 	aliases []Alias
-
 	// currentBan holds a users current Ip ban, if their not currently IPBanned it will be the default value.
 	currentBan Punishment
 	//pastBans holds all a users past Ip bans.
@@ -22,28 +23,22 @@ type Ip struct {
 	lock sync.RWMutex
 }
 
-// IpData is a data representation of Ip used for loading and saving Ip.
-type IpData struct {
-	// Aliases represnt aliases within Ip.
-	Aliases []Alias `json:"aliases"`
-	// CurrentBan represents currentBan within Ip.
-	CurrentBan Punishment `json:"current_ban"`
-	// PastBans represents pastBans within Ip.
-	PastBans []Punishment `json:"past_bans"`
-	// CurrentMute represents currentMute within Ip.
-	CurrentMute Punishment `json:"current_mute"`
-	// PastMutes represents pastMutes within Ip.
-	PastMutes []Punishment `json:"past_mutes"`
+func NewIp(ip string, aliases []Alias, currBan Punishment, pastBans []Punishment, currMute Punishment, pastMutes []Punishment) Ip {
+	return Ip{
+		ip:          ip,
+		aliases:     aliases,
+		currentBan:  currBan,
+		pastBans:    pastBans,
+		currentMute: currMute,
+		pastMutes:   pastMutes,
+	}
 }
 
-func (i *IpData) Container() Container {
-	return &Ip{
-		aliases:     i.Aliases,
-		currentBan:  i.CurrentBan,
-		pastBans:    i.PastBans,
-		currentMute: i.CurrentMute,
-		pastMutes:   i.PastMutes,
-	}
+// Identifier ...
+func (i *Ip) Identifier() any {
+	i.lock.RLock()
+	defer i.lock.RUnlock()
+	return i.ip
 }
 
 // AddAlias attempts to add an alias into IP, it will return true if it managed to add it and false if a value already
@@ -89,12 +84,10 @@ func (i *Ip) Ban(b Punishment) {
 
 // BanHistory returns the BanHistory for the user, instead of returning a ban it returns a []BanData as it's meant to
 // be used for reading bans only.
-func (i *Ip) BanHistory() []Data {
-	var bans []Data
-	for _, ban := range i.pastBans {
-		bans = append(bans, ban.Data())
-	}
-	return bans
+func (i *Ip) BanHistory() []Punishment {
+	i.lock.RLock()
+	defer i.lock.RUnlock()
+	return i.pastBans
 }
 
 // Muted returns whether the current holder is banned or not.
@@ -121,23 +114,8 @@ func (i *Ip) Mute(b Punishment) {
 
 // MuteHistory returns the MuteHistory for the user, instead of returning a punishment it returns a []Data as it's meant to
 // be used for reading mutes only.
-func (i *Ip) MuteHistory() []Data {
-	var bans []Data
-	for _, ban := range i.pastBans {
-		bans = append(bans, ban.Data())
-	}
-	return bans
-}
-
-// Data returns the data representation of IP.
-func (i *Ip) Data() Dataer {
+func (i *Ip) MuteHistory() []Punishment {
 	i.lock.RLock()
 	defer i.lock.RUnlock()
-	return &IpData{
-		Aliases:     i.aliases,
-		CurrentBan:  i.currentBan,
-		PastBans:    i.pastBans,
-		CurrentMute: i.currentMute,
-		PastMutes:   i.pastMutes,
-	}
+	return i.pastMutes
 }

@@ -7,9 +7,10 @@ import (
 
 // Device holds all device related punishments for a user as well as their aliases.
 type Device struct {
+	// device is the specific identifier for this deviceid
+	device string
 	// aliases represent the information of other accounts that have the same device-id as this one.
 	aliases []Alias
-
 	// currentBan holds a users current device ban, if they're  not currently device banned it will be the default value.
 	currentBan Punishment
 	//pastBans holds all a users past device bans.
@@ -22,28 +23,22 @@ type Device struct {
 	lock sync.RWMutex
 }
 
-// DeviceData is a data representation of device used for loading and saving devices.
-type DeviceData struct {
-	// Aliases represnt aliases within Device.
-	Aliases []Alias `json:"aliases"`
-	// CurrentBan represents currentBan within Device.
-	CurrentBan Punishment `json:"current_ban"`
-	// PastBans represents pastBans within Device.
-	PastBans []Punishment `json:"past_bans"`
-	// CurrentMute represents currentMute within Device.
-	CurrentMute Punishment `json:"current_mute"`
-	// PastMutes represents pastMutes within Device.
-	PastMutes []Punishment `json:"past_mutes"`
+func NewDevice(device string, aliases []Alias, currBan Punishment, pastBans []Punishment, currMute Punishment, pastMutes []Punishment) Device {
+	return Device{
+		device:      device,
+		aliases:     aliases,
+		currentBan:  currBan,
+		pastBans:    pastBans,
+		currentMute: currMute,
+		pastMutes:   pastMutes,
+	}
 }
 
-func (d *DeviceData) Container() Container {
-	return &Ip{
-		aliases:     d.Aliases,
-		currentBan:  d.CurrentBan,
-		pastBans:    d.PastBans,
-		currentMute: d.CurrentMute,
-		pastMutes:   d.PastMutes,
-	}
+// Identifier ...
+func (d *Device) Identifier() any {
+	d.lock.RLock()
+	defer d.lock.RUnlock()
+	return d.device
 }
 
 // AddAlias attempts to add an alias into IP, it will return true if it managed to add it and false if a value already
@@ -89,12 +84,10 @@ func (d *Device) Ban(b Punishment) {
 
 // BanHistory returns the BanHistory for the user, instead of returning a ban it returns a []BanData as it's meant to
 // be used for reading bans only.
-func (d *Device) BanHistory() []Data {
-	var bans []Data
-	for _, ban := range d.pastBans {
-		bans = append(bans, ban.Data())
-	}
-	return bans
+func (d *Device) BanHistory() []Punishment {
+	d.lock.RLock()
+	defer d.lock.RUnlock()
+	return d.pastBans
 }
 
 // Muted returns whether the current holder is banned or not.
@@ -121,23 +114,8 @@ func (d *Device) Mute(b Punishment) {
 
 // MuteHistory returns the MuteHistory for the user, instead of returning a punishment it returns a []Data as it's meant to
 // be used for reading mutes only.
-func (d *Device) MuteHistory() []Data {
-	var bans []Data
-	for _, ban := range d.pastBans {
-		bans = append(bans, ban.Data())
-	}
-	return bans
-}
-
-// Data returns the data representation of IP.
-func (d *Device) Data() Dataer {
+func (d *Device) MuteHistory() []Punishment {
 	d.lock.RLock()
 	defer d.lock.RUnlock()
-	return &IpData{
-		Aliases:     d.aliases,
-		CurrentBan:  d.currentBan,
-		PastBans:    d.pastBans,
-		CurrentMute: d.currentMute,
-		PastMutes:   d.pastMutes,
-	}
+	return d.pastMutes
 }

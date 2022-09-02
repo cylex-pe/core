@@ -11,14 +11,7 @@ const DeviceIdentifier = "device"
 
 // Container is any data type that can hold user specific data
 type Container interface {
-	// Data returns a marshable representation of the data without a mutex.
-	Data() Dataer
-}
-
-// Dataer is returned by a Container for saving and loading. We use a container as it's difficult to directly pass a
-// Container with a built in mutex.
-type Dataer interface {
-	Container() Container
+	Identifier() any
 }
 
 type AliasHandler func(username, ip, device, xuid string, data ...any) bool
@@ -41,6 +34,7 @@ func New(provider Provider, aliasHandler AliasHandler) Registry {
 	return Registry{
 		provider:     provider,
 		aliasHandler: aliasHandler,
+		punishments:  map[string]map[any]Container{},
 	}
 }
 
@@ -60,7 +54,10 @@ func (r *Registry) AddAlias(username, ip, device, xuid string, data ...any) bool
 			Xuid:     xuid,
 		})
 	}
-	return r.aliasHandler(username, ip, device, xuid, data)
+	if r.aliasHandler != nil {
+		return r.aliasHandler(username, ip, device, xuid, data)
+	}
+	return true
 }
 
 // Xbox attempts to load an xbox object and return it.
@@ -107,19 +104,17 @@ func (r *Registry) Device(device string) (*Device, error) {
 func (r *Registry) Load(ptype string, identifier any) (Container, error) {
 	r.lock.Lock()
 	defer r.lock.Unlock()
-	if _, ok := r.punishments[ptype]; ok {
+	if _, ok := r.punishments[ptype]; !ok {
 		r.punishments[ptype] = map[any]Container{}
 	}
 
 	if c, ok := r.punishments[ptype][identifier]; ok {
 		return c, nil
 	}
-	data, err := r.provider.Load(ptype, identifier)
+	container, err := r.provider.Load(ptype, identifier)
 	if err != nil {
 		return nil, fmt.Errorf("unable to load container: %w", err)
 	}
-	container := data.Container()
-
 	r.punishments[ptype][identifier] = container
 	return r.punishments[ptype][identifier], nil
 }
@@ -132,9 +127,7 @@ func (r *Registry) Save() error {
 	err = nil
 	for ptype, punishments := range r.punishments {
 		for id, punishment := range punishments {
-			p := punishment
-			data := p.Data()
-			er := r.provider.Save(ptype, id, data)
+			er := r.provider.Save(ptype, id, &punishment)
 			if err == nil && er != nil {
 				err = fmt.Errorf("error saving punishment type: %v identifier %v: %w", ptype, id, er)
 			}
