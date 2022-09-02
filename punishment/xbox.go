@@ -4,9 +4,6 @@ import "sync"
 
 // Xbox represents a specific user's punishment information such as a users bans, ipbans, reports.
 type Xbox struct {
-	// Username is the name of the user with this ban, it is not used to uniquely identify the ban, xuid is used for this.
-	// It exists for convenience.
-	username string
 	// currentBan is the players current active ban, this value can be null so we use a pointer.
 	currentBan Punishment
 	// pastBans store a history of all the users past bans.
@@ -15,14 +12,12 @@ type Xbox struct {
 	currentMute Punishment
 	// pastMutes store a history of all the users past mutes.
 	pastMutes []Punishment
-	// lock locks the data for accessing.
+
 	lock sync.RWMutex
 }
 
 // XboxData holds the required data for an Xbox.
 type XboxData struct {
-	// Username represents username within Xbox.
-	Username string `json:"username"`
 	// CurrentBan represents currentBan within Xbox.
 	CurrentBan Punishment `json:"current_ban"`
 	// PastBans represents pastBans within Xbox.
@@ -35,7 +30,6 @@ type XboxData struct {
 
 func (x *XboxData) Container() Container {
 	return &Xbox{
-		username:    x.Username,
 		currentBan:  x.CurrentBan,
 		pastBans:    x.PastBans,
 		currentMute: x.CurrentMute,
@@ -112,7 +106,6 @@ func (x *Xbox) Data() Dataer {
 	x.lock.RLock()
 	defer x.lock.RUnlock()
 	return &XboxData{
-		Username:    x.username,
 		CurrentBan:  x.currentBan,
 		PastBans:    x.pastBans,
 		CurrentMute: x.currentMute,
