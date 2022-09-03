@@ -125,7 +125,7 @@ func (d *Device) MuteHistory() []Punishment {
 }
 
 // Data returns the data representation of IP.
-func (d *Device) Data() Dataer {
+func (d *Device) Data() DataHolder {
 	d.lock.RLock()
 	defer d.lock.RUnlock()
 	return &DeviceData{

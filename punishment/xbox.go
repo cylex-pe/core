@@ -98,7 +98,7 @@ func (x *Xbox) MuteHistory() []Punishment {
 }
 
 // Data returns the data representation for this punishment.
-func (x *Xbox) Data() Dataer {
+func (x *Xbox) Data() DataHolder {
 	x.lock.RLock()
 	defer x.lock.RUnlock()
 	return &XboxData{

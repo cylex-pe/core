@@ -11,10 +11,10 @@ const DeviceIdentifier = "device"
 
 // Container is any data type that can hold user specific data
 type Container interface {
-	Data() Dataer
+	Data() DataHolder
 }
 
-type Dataer interface {
+type DataHolder interface {
 	Container() Container
 }
 
